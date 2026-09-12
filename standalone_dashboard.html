@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Tourism Analytics System</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Dark Mode Defaults */
+    body.dark {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    
+    /* Light Mode Overrides */
+    body.light {
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    body.light header,
+    body.light footer {
+      background-color: rgba(255, 255, 255, 0.92) !important;
+      border-color: #e2e8f0 !important;
+      color: #1e293b !important;
+    }
+    body.light section,
+    body.light .bg-slate-800\/80,
+    body.light .bg-slate-800\/60,
+    body.light .bg-slate-800 {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+    }
+    body.light .text-white {
+      color: #0f172a !important;
+    }
+    body.light .text-slate-400,
+    body.light .text-slate-300 {
+      color: #64748b !important;
+    }
+    body.light input,
+    body.light select {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    body.light .bg-slate-900\/90,
+    body.light .bg-slate-900\/80,
+    body.light .bg-slate-900\/60,
+    body.light .bg-slate-900\/40,
+    body.light .bg-slate-900 {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    body.light table thead {
+      background-color: #f1f5f9 !important;
+      color: #475569 !important;
+      border-color: #cbd5e1 !important;
+    }
+    body.light table tbody tr:hover {
+      background-color: #f1f5f9 !important;
+    }
+    body.light table tbody tr {
+      border-color: #e2e8f0 !important;
+    }
+    body.light .modal-card {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 9999px; }
+  </style>
+</head>
+<body class="dark min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- Top Navbar -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center text-cyan-400">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <h1 id="txtAppTitle" class="text-xl sm:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-cyan-300">
+            Smart Tourism Analytics System
+          </h1>
+          <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-950/80 text-cyan-400 border border-cyan-800/80">
+            <i data-lucide="sparkles" class="w-3 h-3 mr-1"></i> <span id="txtLiveBadge">Live Engine</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Controls: Language, Theme, History, Auth & CSV Export -->
+      <div class="flex flex-wrap items-center gap-2 self-end md:self-center">
+        
+        <!-- Record Counter Pill -->
+        <div class="bg-slate-800/80 border border-slate-700/80 px-2.5 py-1 rounded-lg text-xs flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="font-bold text-white" id="counterPill">0 / 0 records</span>
+        </div>
+
+        <!-- 1. Language Selector -->
+        <div class="relative">
+          <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-medium cursor-pointer outline-none transition">
+            <option value="en">🌐 English</option>
+            <option value="te">🌐 తెలుగు (Telugu)</option>
+            <option value="hi">🌐 हिंदी (Hindi)</option>
+            <option value="es">🌐 Español</option>
+          </select>
+        </div>
+
+        <!-- 2. Theme Toggle (Dark / Light) -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1.5" title="Toggle Light / Dark Theme">
+          <i id="themeIcon" data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+        </button>
+
+        <!-- 3. History Button with Badge -->
+        <button onclick="toggleHistoryModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1.5 relative" title="View Filter & Query History">
+          <i data-lucide="history" class="w-4 h-4 text-purple-400"></i>
+          <span id="txtHistoryBtn">History</span>
+          <span id="historyBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-purple-900 text-purple-200 border border-purple-700">0</span>
+        </button>
+
+        <!-- 4. Sign In / User Profile -->
+        <div id="authContainer">
+          <!-- Rendered dynamically by checkAuth() -->
+        </div>
+
+        <!-- Reset Button -->
+        <button onclick="resetFilters()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition flex items-center gap-1" title="Reset all filters">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span id="txtResetBtn">Reset</span>
+        </button>
+
+        <!-- Export CSV Button -->
+        <button onclick="exportToCsv()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-600/30 transition flex items-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span id="txtExportBtn">Export CSV</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Dashboard -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- Filter Bar -->
+    <section class="bg-slate-800/60 backdrop-blur-sm border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-lg mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2 text-sm font-bold text-slate-200 uppercase tracking-wider">
+          <i data-lucide="filter" class="w-4 h-4 text-cyan-400"></i>
+          <span id="txtFilterTitle">Interactive Data Slicing & Filters</span>
+        </div>
+        <button id="clearFiltersBtn" onclick="resetFilters()" class="hidden text-xs text-rose-400 hover:text-rose-300 transition flex items-center gap-1 font-medium">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i> <span id="txtClearAll">Clear All Filters</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <!-- Season Filter -->
+        <div class="space-y-1.5">
+          <label id="lblFilterSeason" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i> Filter by Season
+          </label>
+          <select id="seasonFilter" onchange="applyFilters(true)" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:ring-2 focus:ring-cyan-500/50 outline-none cursor-pointer">
+            <option value="All">🌟 All Seasons</option>
+            <option value="Summer">Summer</option>
+            <option value="Winter">Winter</option>
+            <option value="Monsoon">Monsoon</option>
+            <option value="Festive">Festive</option>
+          </select>
+        </div>
+
+        <!-- Region Filter -->
+        <div class="space-y-1.5">
+          <label id="lblFilterRegion" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i> Filter by Region
+          </label>
+          <select id="regionFilter" onchange="applyFilters(true)" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:ring-2 focus:ring-cyan-500/50 outline-none cursor-pointer">
+            <option value="All">📍 All Regions</option>
+            <option value="South India">South India</option>
+            <option value="North India">North India</option>
+            <option value="East India">East India</option>
+            <option value="West India">West India</option>
+            <option value="Central India">Central India</option>
+          </select>
+        </div>
+
+        <!-- Travel Preference -->
+        <div class="space-y-1.5">
+          <label id="lblFilterPref" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="tag" class="w-3.5 h-3.5 text-purple-400"></i> Travel Preference
+          </label>
+          <select id="prefFilter" onchange="applyFilters(true)" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:ring-2 focus:ring-cyan-500/50 outline-none cursor-pointer">
+            <option value="All">🎯 All Preferences</option>
+            <option value="Heritage & Culture">Heritage & Culture</option>
+            <option value="Eco & Nature">Eco & Nature</option>
+            <option value="Spiritual & Pilgrimage">Spiritual & Pilgrimage</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Leisure & Beach">Leisure & Beach</option>
+          </select>
+        </div>
+
+        <!-- Search Input -->
+        <div class="space-y-1.5">
+          <label id="lblFilterSearch" class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-cyan-400"></i> Search Destination / City
+          </label>
+          <div class="relative">
+            <input type="text" id="searchInput" oninput="applyFilters(true)" placeholder="e.g. Tirupati, Goa, Nellore..." class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 pl-9 text-sm text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-cyan-500/50 outline-none">
+            <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Overview Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <!-- 1. Total Visitors -->
+      <div class="relative overflow-hidden bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg group">
+        <div class="flex items-center justify-between">
+          <span id="txtKpi1Title" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Visitors</span>
+          <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-800 flex items-center justify-center text-cyan-400">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-white tracking-tight" id="kpiTotalVisitors">0</div>
+          <div class="flex items-center gap-1.5 mt-2 text-xs">
+            <span class="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 font-semibold border border-cyan-800/60" id="kpiSampleShare">100% sample</span>
+            <span id="txtActiveRows" class="text-slate-400">active pipeline rows</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Top Destination -->
+      <div class="relative overflow-hidden bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg group">
+        <div class="flex items-center justify-between">
+          <span id="txtKpi2Title" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Top Destination</span>
+          <div class="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-2xl font-extrabold text-white tracking-tight truncate" id="kpiTopDestination">None</div>
+          <div class="flex items-center gap-1.5 mt-2 text-xs">
+            <span class="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 font-semibold border border-emerald-800/60" id="kpiTopDestCount">0 visits</span>
+            <span id="txtHighestFootfall" class="text-slate-400">highest footfall</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Avg Tourist Spending -->
+      <div class="relative overflow-hidden bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg group">
+        <div class="flex items-center justify-between">
+          <span id="txtKpi3Title" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Tourist Spending</span>
+          <div class="w-10 h-10 rounded-xl bg-amber-950/80 border border-amber-800 flex items-center justify-center text-amber-400 font-bold">
+            ₹
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-white tracking-tight" id="kpiAvgSpending">₹0</div>
+          <div class="flex items-center gap-1.5 mt-2 text-xs">
+            <span id="txtTotalVol" class="text-slate-400">Total Volume:</span>
+            <span class="font-semibold text-amber-300" id="kpiTotalRevenue">₹0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Peak Season -->
+      <div class="relative overflow-hidden bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg group">
+        <div class="flex items-center justify-between">
+          <span id="txtKpi4Title" class="text-xs font-bold text-slate-400 uppercase tracking-wider">Peak Season</span>
+          <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-800 flex items-center justify-center text-purple-400">
+            <i data-lucide="sun-medium" class="w-5 h-5"></i>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-white tracking-tight" id="kpiPeakSeason">None</div>
+          <div class="flex items-center gap-2 mt-2 text-xs">
+            <span class="px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 font-semibold border border-purple-800/60" id="kpiPeakSeasonCount">0 visitors</span>
+            <span class="text-slate-400" id="kpiRating">⭐ 4.7/5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Visualizations Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- 1. Popular Destinations (Bar Chart) -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg flex flex-col h-[380px]">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-cyan-950/80 border border-cyan-800 rounded-lg text-cyan-400">
+              <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 id="txtChart1Title" class="text-base font-bold text-white tracking-wide">Popular Destinations</h2>
+              <p id="txtChart1Sub" class="text-xs text-slate-400">Visitor counts across leading tourist locations</p>
+            </div>
+          </div>
+          <span id="txtChart1Badge" class="text-[11px] font-semibold text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-md border border-slate-700">Ranked by Visits</span>
+        </div>
+        <div class="flex-1 w-full min-h-0 relative">
+          <canvas id="destinationsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 2. Visitor Trends Over Time (Line Chart) -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg flex flex-col h-[380px]">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-blue-950/80 border border-blue-800 rounded-lg text-blue-400">
+              <i data-lucide="trending-up" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 id="txtChart2Title" class="text-base font-bold text-white tracking-wide">Visitor Trends Over Time</h2>
+              <p id="txtChart2Sub" class="text-xs text-slate-400">Temporal distribution & seasonal footfall spikes</p>
+            </div>
+          </div>
+          <span id="txtChart2Badge" class="text-[11px] font-semibold text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded-md border border-cyan-800">Seasonal Curve</span>
+        </div>
+        <div class="flex-1 w-full min-h-0 relative">
+          <canvas id="trendsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 3. Tourist Preferences (Donut Chart) -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg flex flex-col h-[380px]">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-purple-950/80 border border-purple-800 rounded-lg text-purple-400">
+              <i data-lucide="pie-chart" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 id="txtChart3Title" class="text-base font-bold text-white tracking-wide">Tourist Preferences</h2>
+              <p id="txtChart3Sub" class="text-xs text-slate-400">Distribution by travel motivation & interest</p>
+            </div>
+          </div>
+          <span id="txtChart3Badge" class="text-[11px] font-semibold text-purple-400 bg-purple-950/60 px-2.5 py-1 rounded-md border border-purple-800">Demographics</span>
+        </div>
+        <div class="flex-1 w-full min-h-0 relative">
+          <canvas id="preferencesChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 4. Spending Analysis (Bar Chart) -->
+      <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg flex flex-col h-[380px]">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="p-2 bg-amber-950/80 border border-amber-800 rounded-lg text-amber-400">
+              <i data-lucide="wallet-cards" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 id="txtChart4Title" class="text-base font-bold text-white tracking-wide">Expenditure by Travel Group</h2>
+              <p id="txtChart4Sub" class="text-xs text-slate-400">Average spending across Solo, Couple, Family, Friends</p>
+            </div>
+          </div>
+          <span id="txtChart4Badge" class="text-[11px] font-semibold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded-md border border-amber-800">Spending Pattern</span>
+        </div>
+        <div class="flex-1 w-full min-h-0 relative">
+          <canvas id="spendingChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtered Dataset Table -->
+    <div class="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-5 shadow-lg mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-emerald-950/80 border border-emerald-800 rounded-lg text-emerald-400">
+            <i data-lucide="database" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 id="txtTableTitle" class="text-base font-bold text-white tracking-wide">Dataset Records (Client Data Science Pipeline)</h2>
+            <p id="txtTableSub" class="text-xs text-slate-400">Granular rows reflecting active queries, filters, and tourist demographics</p>
+          </div>
+        </div>
+        <button onclick="exportToCsv()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 self-end sm:self-center">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span id="txtExportView">Export View</span>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-700/70 rounded-xl">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-700/80">
+            <tr>
+              <th id="thId" class="px-4 py-3">ID</th>
+              <th id="thTourist" class="px-4 py-3">Tourist / Origin</th>
+              <th id="thDest" class="px-4 py-3">Destination</th>
+              <th id="thRegion" class="px-4 py-3">Region</th>
+              <th id="thSeason" class="px-4 py-3">Season</th>
+              <th id="thPurpose" class="px-4 py-3">Group & Purpose</th>
+              <th id="thSpend" class="px-4 py-3 text-right">Spending</th>
+              <th id="thDuration" class="px-4 py-3 text-center">Duration</th>
+              <th id="thRating" class="px-4 py-3 text-center">Rating</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-700/60 bg-slate-900/40">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-2 text-xs text-slate-400">
+        <div id="tablePaginationInfo">Showing 1 to 10 entries</div>
+        <div class="flex items-center gap-2">
+          <button id="prevBtn" onclick="prevPage()" class="p-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-700 disabled:opacity-40 transition">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <span id="pageIndicator" class="px-2 text-slate-200 font-medium">Page 1</span>
+          <button id="nextBtn" onclick="nextPage()" class="p-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-700 disabled:opacity-40 transition">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Clean Production Footer -->
+  <footer class="mt-12 py-8 border-t border-slate-800 bg-slate-950/60 text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+      <div class="flex items-center gap-2 font-medium text-slate-300">
+        <i data-lucide="compass" class="w-4 h-4 text-cyan-400"></i>
+        <span>Smart Tourism Analytics System</span>
+        <span class="text-slate-600">•</span>
+        <span id="txtFooterTag" class="text-slate-400">Visitor Intelligence & Analytics Platform</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span id="txtFooter1">Interactive Visualization Engine</span>
+        <span>•</span>
+        <span id="txtFooter2">Client-Side Data Pipeline</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- AUTH MODAL (SIGN IN / SIGN UP) -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div class="modal-card bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+      <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-5">
+        <div class="p-2.5 rounded-xl bg-cyan-950 border border-cyan-800 text-cyan-400">
+          <i data-lucide="user-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 id="txtModalTitle" class="text-lg font-bold text-white">Analyst Sign In</h3>
+          <p id="txtModalSub" class="text-xs text-slate-400">Sign in to save your queries and filter history</p>
+        </div>
+      </div>
+
+      <form onsubmit="handleSignIn(event)" class="space-y-4">
+        <div>
+          <label id="lblUsername" class="text-xs font-semibold text-slate-300 block mb-1">Full Name or Email</label>
+          <input type="text" id="authInputName" required placeholder="e.g. Haasini Gurram" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus:ring-2 focus:ring-cyan-500">
+        </div>
+        <div>
+          <label id="lblRole" class="text-xs font-semibold text-slate-300 block mb-1">Role / Designation</label>
+          <select id="authInputRole" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-cyan-500">
+            <option value="Lead Data Scientist">Lead Data Scientist</option>
+            <option value="Tourism Analyst">Tourism Analyst</option>
+            <option value="Research Scholar">Research Scholar</option>
+            <option value="Administrator">Administrator</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-600/30 transition">
+          <span id="txtSignInSubmit">Sign In & Save Session</span>
+        </button>
+
+        <div class="pt-2 border-t border-slate-800">
+          <span class="text-[11px] text-slate-500 block mb-2">Quick 1-Click Demo Login:</span>
+          <div class="flex gap-2">
+            <button type="button" onclick="quickLogin('Haasini Gurram', 'Lead Data Scientist')" class="flex-1 py-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition">
+              👤 Haasini
+            </button>
+            <button type="button" onclick="quickLogin('Guest Analyst', 'Tourism Analyst')" class="flex-1 py-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              🔍 Guest
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- QUERY & ACTIVITY HISTORY DRAWER / MODAL -->
+  <div id="historyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div class="modal-card bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-xl bg-purple-950 border border-purple-800 text-purple-400">
+            <i data-lucide="history" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="txtHistoryModalTitle" class="text-base font-bold text-white">Filter & Query History</h3>
+            <p id="txtHistoryModalSub" class="text-xs text-slate-400">Auto-saved activity log. Click any record to restore query.</p>
+          </div>
+        </div>
+        <button onclick="toggleHistoryModal()" class="text-slate-400 hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="historyListContainer" class="flex-1 overflow-y-auto py-4 space-y-2.5">
+        <!-- History items rendered dynamically -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+        <button onclick="clearHistory()" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-medium transition">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> <span id="txtClearHistory">Clear History</span>
+        </button>
+        <button onclick="toggleHistoryModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script for Mock Data, Pipeline, Multi-Language, Theme, Auth, History & Charts -->
+  <script>
+    // 1. Raw Mock Dataset (100 records)
+    const rawDataset = [
+      { id: "TR-1001", touristName: "Aarav Sharma", originCity: "Hyderabad", originCountry: "India", destination: "Tirupati", region: "South India", season: "Festive", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 24500, stayDurationDays: 3, satisfactionRating: 4.8, visitDate: "2025-10-15", bookingMode: "Online Portal" },
+      { id: "TR-1002", touristName: "Pooja Hegde", originCity: "Bengaluru", originCountry: "India", destination: "Araku Valley", region: "South India", season: "Winter", travelGroup: "Friends", preference: "Eco & Nature", spendingAmountINR: 18200, stayDurationDays: 4, satisfactionRating: 4.5, visitDate: "2025-12-08", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1003", touristName: "David Miller", originCity: "London", originCountry: "United Kingdom", destination: "Goa", region: "West India", season: "Winter", travelGroup: "Couple", preference: "Leisure & Beach", spendingAmountINR: 78500, stayDurationDays: 7, satisfactionRating: 4.9, visitDate: "2025-12-22", bookingMode: "Online Portal" },
+      { id: "TR-1004", touristName: "Kavitha Reddy", originCity: "Nellore", originCountry: "India", destination: "Munnar", region: "South India", season: "Monsoon", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 32000, stayDurationDays: 5, satisfactionRating: 4.6, visitDate: "2025-07-14", bookingMode: "Travel Agent" },
+      { id: "TR-1005", touristName: "Rohan Varma", originCity: "Delhi", originCountry: "India", destination: "Leh Ladakh", region: "North India", season: "Summer", travelGroup: "Friends", preference: "Adventure", spendingAmountINR: 52000, stayDurationDays: 8, satisfactionRating: 4.7, visitDate: "2025-06-18", bookingMode: "Online Portal" },
+      { id: "TR-1006", touristName: "Ananya Roy", originCity: "Kolkata", originCountry: "India", destination: "Varanasi", region: "North India", season: "Winter", travelGroup: "Solo", preference: "Heritage & Culture", spendingAmountINR: 15400, stayDurationDays: 4, satisfactionRating: 4.4, visitDate: "2025-11-20", bookingMode: "Online Portal" },
+      { id: "TR-1007", touristName: "Siddharth Rao", originCity: "Chennai", originCountry: "India", destination: "Ooty", region: "South India", season: "Summer", travelGroup: "Couple", preference: "Eco & Nature", spendingAmountINR: 28900, stayDurationDays: 4, satisfactionRating: 4.3, visitDate: "2025-05-12", bookingMode: "Online Portal" },
+      { id: "TR-1008", touristName: "Emma Watson", originCity: "Sydney", originCountry: "Australia", destination: "Jaipur", region: "West India", season: "Winter", travelGroup: "Solo", preference: "Heritage & Culture", spendingAmountINR: 64000, stayDurationDays: 6, satisfactionRating: 4.8, visitDate: "2025-12-04", bookingMode: "Travel Agent" },
+      { id: "TR-1009", touristName: "Vikram Singhania", originCity: "Ahmedabad", originCountry: "India", destination: "Udaipur", region: "West India", season: "Festive", travelGroup: "Couple", preference: "Heritage & Culture", spendingAmountINR: 48000, stayDurationDays: 4, satisfactionRating: 4.7, visitDate: "2025-10-28", bookingMode: "Online Portal" },
+      { id: "TR-1010", touristName: "Meera Krishnan", originCity: "Nellore", originCountry: "India", destination: "Tirupati", region: "South India", season: "Summer", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 12500, stayDurationDays: 2, satisfactionRating: 4.5, visitDate: "2025-05-24", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1011", touristName: "Suresh Babu", originCity: "Vijayawada", originCountry: "India", destination: "Pulicat & Mypadu", region: "South India", season: "Winter", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 9500, stayDurationDays: 2, satisfactionRating: 4.4, visitDate: "2025-01-14", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1012", touristName: "Liam Johnson", originCity: "Toronto", originCountry: "Canada", destination: "Rishikesh", region: "North India", season: "Summer", travelGroup: "Solo", preference: "Adventure", spendingAmountINR: 42000, stayDurationDays: 9, satisfactionRating: 4.6, visitDate: "2025-04-10", bookingMode: "Online Portal" },
+      { id: "TR-1013", touristName: "Priyanka Patel", originCity: "Surat", originCountry: "India", destination: "Goa", region: "West India", season: "Festive", travelGroup: "Friends", preference: "Leisure & Beach", spendingAmountINR: 36000, stayDurationDays: 5, satisfactionRating: 4.9, visitDate: "2025-11-12", bookingMode: "Online Portal" },
+      { id: "TR-1014", touristName: "Deepak Chawla", originCity: "Chandigarh", originCountry: "India", destination: "Manali", region: "North India", season: "Winter", travelGroup: "Couple", preference: "Adventure", spendingAmountINR: 39500, stayDurationDays: 5, satisfactionRating: 4.7, visitDate: "2025-12-30", bookingMode: "Online Portal" },
+      { id: "TR-1015", touristName: "Sneha Nair", originCity: "Kochi", originCountry: "India", destination: "Hampi", region: "South India", season: "Winter", travelGroup: "Friends", preference: "Heritage & Culture", spendingAmountINR: 19800, stayDurationDays: 3, satisfactionRating: 4.6, visitDate: "2025-01-20", bookingMode: "Online Portal" },
+      { id: "TR-1016", touristName: "Rajesh Kothari", originCity: "Mumbai", originCountry: "India", destination: "Darjeeling", region: "East India", season: "Summer", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 44000, stayDurationDays: 6, satisfactionRating: 4.5, visitDate: "2025-05-18", bookingMode: "Travel Agent" },
+      { id: "TR-1017", touristName: "Elena Rostova", originCity: "Moscow", originCountry: "Russia", destination: "Goa", region: "West India", season: "Winter", travelGroup: "Couple", preference: "Leisure & Beach", spendingAmountINR: 85000, stayDurationDays: 12, satisfactionRating: 4.8, visitDate: "2025-01-05", bookingMode: "Travel Agent" },
+      { id: "TR-1018", touristName: "Manoj Kumar", originCity: "Visakhapatnam", originCountry: "India", destination: "Araku Valley", region: "South India", season: "Monsoon", travelGroup: "Couple", preference: "Eco & Nature", spendingAmountINR: 14500, stayDurationDays: 3, satisfactionRating: 4.3, visitDate: "2025-08-22", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1019", touristName: "Harish Gupta", originCity: "Bhopal", originCountry: "India", destination: "Khajuraho", region: "Central India", season: "Winter", travelGroup: "Family", preference: "Heritage & Culture", spendingAmountINR: 22000, stayDurationDays: 3, satisfactionRating: 4.4, visitDate: "2025-11-15", bookingMode: "Online Portal" },
+      { id: "TR-1020", touristName: "Divya Nambiar", originCity: "Trivandrum", originCountry: "India", destination: "Coorg", region: "South India", season: "Monsoon", travelGroup: "Couple", preference: "Eco & Nature", spendingAmountINR: 26000, stayDurationDays: 4, satisfactionRating: 4.7, visitDate: "2025-07-28", bookingMode: "Online Portal" },
+      { id: "TR-1021", touristName: "Arun Prasad", originCity: "Tirupati", originCountry: "India", destination: "Kanyakumari", region: "South India", season: "Festive", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 21500, stayDurationDays: 3, satisfactionRating: 4.5, visitDate: "2025-10-18", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1022", touristName: "Sophie Martin", originCity: "Paris", originCountry: "France", destination: "Pondicherry", region: "South India", season: "Winter", travelGroup: "Solo", preference: "Heritage & Culture", spendingAmountINR: 58000, stayDurationDays: 7, satisfactionRating: 4.9, visitDate: "2025-12-14", bookingMode: "Online Portal" },
+      { id: "TR-1023", touristName: "Gaurav Malhotra", originCity: "Delhi", originCountry: "India", destination: "Shimla", region: "North India", season: "Summer", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 38000, stayDurationDays: 5, satisfactionRating: 4.2, visitDate: "2025-06-05", bookingMode: "Travel Agent" },
+      { id: "TR-1024", touristName: "Nandini Sen", originCity: "Patna", originCountry: "India", destination: "Puri", region: "East India", season: "Festive", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 19000, stayDurationDays: 4, satisfactionRating: 4.6, visitDate: "2025-07-07", bookingMode: "Online Portal" },
+      { id: "TR-1025", touristName: "Akash Singhal", originCity: "Indore", originCountry: "India", destination: "Kanha National Park", region: "Central India", season: "Winter", travelGroup: "Friends", preference: "Adventure", spendingAmountINR: 31000, stayDurationDays: 4, satisfactionRating: 4.7, visitDate: "2025-02-16", bookingMode: "Online Portal" },
+      { id: "TR-1026", touristName: "Lakshmi Narayana", originCity: "Guntur", originCountry: "India", destination: "Tirupati", region: "South India", season: "Festive", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 16800, stayDurationDays: 2, satisfactionRating: 4.8, visitDate: "2025-09-29", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1027", touristName: "Karthik Subramanian", originCity: "Coimbatore", originCountry: "India", destination: "Wayanad", region: "South India", season: "Monsoon", travelGroup: "Friends", preference: "Eco & Nature", spendingAmountINR: 17500, stayDurationDays: 3, satisfactionRating: 4.5, visitDate: "2025-08-10", bookingMode: "Online Portal" },
+      { id: "TR-1028", touristName: "Chloe Dupont", originCity: "Brussels", originCountry: "Belgium", destination: "Jaipur", region: "West India", season: "Winter", travelGroup: "Couple", preference: "Heritage & Culture", spendingAmountINR: 69000, stayDurationDays: 6, satisfactionRating: 4.8, visitDate: "2025-01-22", bookingMode: "Travel Agent" },
+      { id: "TR-1029", touristName: "Santosh Yadav", originCity: "Lucknow", originCountry: "India", destination: "Agra", region: "North India", season: "Winter", travelGroup: "Family", preference: "Heritage & Culture", spendingAmountINR: 14000, stayDurationDays: 2, satisfactionRating: 4.3, visitDate: "2025-12-10", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1030", touristName: "Tarun Reddy", originCity: "Nellore", originCountry: "India", destination: "Goa", region: "West India", season: "Summer", travelGroup: "Friends", preference: "Leisure & Beach", spendingAmountINR: 28500, stayDurationDays: 4, satisfactionRating: 4.6, visitDate: "2025-05-02", bookingMode: "Online Portal" },
+      { id: "TR-1081", touristName: "G. Haasini (Field Sample)", originCity: "Nellore", originCountry: "India", destination: "Pulicat & Mypadu", region: "South India", season: "Winter", travelGroup: "Friends", preference: "Eco & Nature", spendingAmountINR: 8500, stayDurationDays: 2, satisfactionRating: 5.0, visitDate: "2025-12-05", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1082", touristName: "Manav Joshi", originCity: "Dehradun", originCountry: "India", destination: "Manali", region: "North India", season: "Summer", travelGroup: "Friends", preference: "Adventure", spendingAmountINR: 31500, stayDurationDays: 4, satisfactionRating: 4.5, visitDate: "2025-06-22", bookingMode: "Online Portal" },
+      { id: "TR-1083", touristName: "Ananya Deshmukh", originCity: "Pune", originCountry: "India", destination: "Goa", region: "West India", season: "Winter", travelGroup: "Couple", preference: "Leisure & Beach", spendingAmountINR: 48000, stayDurationDays: 5, satisfactionRating: 4.8, visitDate: "2025-12-31", bookingMode: "Online Portal" },
+      { id: "TR-1084", touristName: "K. Raghunath", originCity: "Nellore", originCountry: "India", destination: "Tirupati", region: "South India", season: "Winter", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 15200, stayDurationDays: 2, satisfactionRating: 4.9, visitDate: "2025-01-25", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1085", touristName: "Liam Evans", originCity: "Auckland", originCountry: "New Zealand", destination: "Leh Ladakh", region: "North India", season: "Summer", travelGroup: "Solo", preference: "Adventure", spendingAmountINR: 81000, stayDurationDays: 11, satisfactionRating: 4.9, visitDate: "2025-07-15", bookingMode: "Online Portal" },
+      { id: "TR-1086", touristName: "Bishal Debnath", originCity: "Siliguri", originCountry: "India", destination: "Darjeeling", region: "East India", season: "Monsoon", travelGroup: "Couple", preference: "Eco & Nature", spendingAmountINR: 19500, stayDurationDays: 3, satisfactionRating: 4.4, visitDate: "2025-08-09", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1087", touristName: "Sarita Agarwal", originCity: "Kanpur", originCountry: "India", destination: "Varanasi", region: "North India", season: "Winter", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 21000, stayDurationDays: 3, satisfactionRating: 4.7, visitDate: "2025-11-29", bookingMode: "Online Portal" },
+      { id: "TR-1088", touristName: "Prasanna Kumar", originCity: "Vijayawada", originCountry: "India", destination: "Munnar", region: "South India", season: "Festive", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 34500, stayDurationDays: 4, satisfactionRating: 4.6, visitDate: "2025-10-10", bookingMode: "Travel Agent" },
+      { id: "TR-1089", touristName: "Sunil Narine", originCity: "Port of Spain", originCountry: "Trinidad", destination: "Jaipur", region: "West India", season: "Winter", travelGroup: "Friends", preference: "Heritage & Culture", spendingAmountINR: 67000, stayDurationDays: 5, satisfactionRating: 4.8, visitDate: "2025-12-08", bookingMode: "Travel Agent" },
+      { id: "TR-1090", touristName: "Yamini Reddy", originCity: "Nellore", originCountry: "India", destination: "Araku Valley", region: "South India", season: "Winter", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 21500, stayDurationDays: 3, satisfactionRating: 4.7, visitDate: "2025-12-17", bookingMode: "Online Portal" },
+      { id: "TR-1091", touristName: "Harshwardhan Patil", originCity: "Nashik", originCountry: "India", destination: "Goa", region: "West India", season: "Summer", travelGroup: "Friends", preference: "Leisure & Beach", spendingAmountINR: 29000, stayDurationDays: 4, satisfactionRating: 4.5, visitDate: "2025-04-25", bookingMode: "Online Portal" },
+      { id: "TR-1092", touristName: "Shruti Haasan", originCity: "Chennai", originCountry: "India", destination: "Ooty", region: "South India", season: "Monsoon", travelGroup: "Solo", preference: "Eco & Nature", spendingAmountINR: 24000, stayDurationDays: 3, satisfactionRating: 4.7, visitDate: "2025-07-12", bookingMode: "Online Portal" },
+      { id: "TR-1093", touristName: "Deepak Saini", originCity: "Jaipur", originCountry: "India", destination: "Rishikesh", region: "North India", season: "Summer", travelGroup: "Friends", preference: "Adventure", spendingAmountINR: 23500, stayDurationDays: 3, satisfactionRating: 4.6, visitDate: "2025-05-20", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1094", touristName: "Madhu Sudhan", originCity: "Nellore", originCountry: "India", destination: "Tirupati", region: "South India", season: "Summer", travelGroup: "Family", preference: "Spiritual & Pilgrimage", spendingAmountINR: 11800, stayDurationDays: 2, satisfactionRating: 4.8, visitDate: "2025-04-05", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1095", touristName: "Claire Bennett", originCity: "London", originCountry: "United Kingdom", destination: "Udaipur", region: "West India", season: "Winter", travelGroup: "Couple", preference: "Heritage & Culture", spendingAmountINR: 79000, stayDurationDays: 6, satisfactionRating: 4.9, visitDate: "2025-02-21", bookingMode: "Travel Agent" },
+      { id: "TR-1096", touristName: "T. Venkataramana", originCity: "Tirupati", originCountry: "India", destination: "Pulicat & Mypadu", region: "South India", season: "Festive", travelGroup: "Family", preference: "Eco & Nature", spendingAmountINR: 12000, stayDurationDays: 2, satisfactionRating: 4.6, visitDate: "2025-10-24", bookingMode: "Direct/Walk-in" },
+      { id: "TR-1097", touristName: "Anil Kumble", originCity: "Bengaluru", originCountry: "India", destination: "Kanha National Park", region: "Central India", season: "Winter", travelGroup: "Family", preference: "Adventure", spendingAmountINR: 42000, stayDurationDays: 4, satisfactionRating: 4.8, visitDate: "2025-01-19", bookingMode: "Online Portal" },
+      { id: "TR-1098", touristName: "Pooja Hegde", originCity: "Mangalore", originCountry: "India", destination: "Goa", region: "West India", season: "Winter", travelGroup: "Friends", preference: "Leisure & Beach", spendingAmountINR: 38000, stayDurationDays: 5, satisfactionRating: 4.7, visitDate: "2025-12-23", bookingMode: "Online Portal" },
+      { id: "TR-1099", touristName: "B. Sridhar", originCity: "Nellore", originCountry: "India", destination: "Munnar", region: "South India", season: "Winter", travelGroup: "Couple", preference: "Eco & Nature", spendingAmountINR: 30500, stayDurationDays: 4, satisfactionRating: 4.7, visitDate: "2025-12-14", bookingMode: "Online Portal" },
+      { id: "TR-1100", touristName: "Siddhant Chaturvedi", originCity: "Mumbai", originCountry: "India", destination: "Leh Ladakh", region: "North India", season: "Summer", travelGroup: "Solo", preference: "Adventure", spendingAmountINR: 56000, stayDurationDays: 8, satisfactionRating: 4.8, visitDate: "2025-06-19", bookingMode: "Online Portal" }
+    ];
+
+    // 2. Multi-Language Localization Dictionary
+    const i18n = {
+      en: {
+        appTitle: "Smart Tourism Analytics System",
+        liveBadge: "Live Engine",
+        filterTitle: "Interactive Data Slicing & Filters",
+        clearAll: "Clear All Filters",
+        filterSeason: "Filter by Season",
+        filterRegion: "Filter by Region",
+        filterPref: "Travel Preference",
+        filterSearch: "Search Destination / City",
+        allSeasons: "🌟 All Seasons",
+        allRegions: "📍 All Regions",
+        allPrefs: "🎯 All Preferences",
+        kpi1: "Total Visitors",
+        kpi2: "Top Destination",
+        kpi3: "Avg Tourist Spending",
+        kpi4: "Peak Season",
+        activeRows: "active pipeline rows",
+        highestFootfall: "highest footfall",
+        totalVol: "Total Volume:",
+        chart1Title: "Popular Destinations",
+        chart1Sub: "Visitor counts across leading tourist locations",
+        chart1Badge: "Ranked by Visits",
+        chart2Title: "Visitor Trends Over Time",
+        chart2Sub: "Temporal distribution & seasonal footfall spikes",
+        chart2Badge: "Seasonal Curve",
+        chart3Title: "Tourist Preferences",
+        chart3Sub: "Distribution by travel motivation & interest",
+        chart3Badge: "Demographics",
+        chart4Title: "Expenditure by Travel Group",
+        chart4Sub: "Average spending across Solo, Couple, Family, Friends",
+        chart4Badge: "Spending Pattern",
+        tableTitle: "Dataset Records (Client Data Science Pipeline)",
+        tableSub: "Granular rows reflecting active queries, filters, and tourist demographics",
+        exportView: "Export View",
+        reset: "Reset",
+        exportCsv: "Export CSV",
+        history: "History",
+        signIn: "Sign In",
+        signOut: "Sign Out",
+        footerTag: "Visitor Intelligence & Analytics Platform",
+        footer1: "Interactive Visualization Engine",
+        footer2: "Client-Side Data Pipeline",
+        thId: "ID",
+        thTourist: "Tourist / Origin",
+        thDest: "Destination",
+        thRegion: "Region",
+        thSeason: "Season",
+        thPurpose: "Group & Purpose",
+        thSpend: "Spending",
+        thDuration: "Duration",
+        thRating: "Rating",
+        clearHistory: "Clear History"
+      },
+      te: {
+        appTitle: "స్మార్ట్ టూరిజం అనలిటిక్స్ సిస్టమ్",
+        liveBadge: "లైవ్ ఇంజిన్",
+        filterTitle: "ఇంటరాక్టివ్ డేటా ఫిల్టర్లు",
+        clearAll: "అన్ని ఫిల్టర్లను తొలగించండి",
+        filterSeason: "కాలం వారీగా ఫిల్టర్",
+        filterRegion: "ప్రాంతం వారీగా ఫిల్టర్",
+        filterPref: "ప్రయాణ ప్రాధాన్యత",
+        filterSearch: "గమ్యస్థానం / నగరాన్ని శోధించండి",
+        allSeasons: "🌟 అన్ని కాలాలు",
+        allRegions: "📍 అన్ని ప్రాంతాలు",
+        allPrefs: "🎯 అన్ని ప్రాధాన్యతలు",
+        kpi1: "మొత్తం సందర్శకులు",
+        kpi2: "అగ్ర పర్యాటక ప్రాంతం",
+        kpi3: "సగటు పర్యాటకుల ఖర్చు",
+        kpi4: "అత్యధిక రద్దీ కాలం",
+        activeRows: "క్రియాశీల డేటా వరుసలు",
+        highestFootfall: "అత్యధిక సందర్శనలు",
+        totalVol: "మొత్తం ఖర్చు పరిమాణం:",
+        chart1Title: "ప్రముఖ పర్యాటక ప్రాంతాలు",
+        chart1Sub: "ప్రముఖ గమ్యస్థానాలలో పర్యాటకుల సంఖ్య",
+        chart1Badge: "ర్యాంక్ వారీగా",
+        chart2Title: "సందర్శకుల కాల ధోరణులు",
+        chart2Sub: "నెలవారీ పర్యాటకుల మార్పులు",
+        chart2Badge: "సీజనల్ కర్వ్",
+        chart3Title: "పర్యాటకుల ఆసక్తులు",
+        chart3Sub: "ఆసక్తి వర్గాల వారీగా పంపిణీ",
+        chart3Badge: "జనాభా వివరాలు",
+        chart4Title: "ప్రయాణ బృందం వారీగా ఖర్చు",
+        chart4Sub: "సింగిల్, జంట, కుటుంబ బృందాల సగటు ఖర్చు",
+        chart4Badge: "ఖర్చు విధానం",
+        tableTitle: "డేటాసెట్ రికార్డులు (డేటా సైన్స్ పైప్‌లైన్)",
+        tableSub: "ఫిల్టర్ చేసిన పర్యాటకుల సమగ్ర వివరాలు",
+        exportView: "ఎగుమతి వీక్షణ",
+        reset: "రీసెట్",
+        exportCsv: "CSV ఎగుమతి",
+        history: "చరిత్ర",
+        signIn: "లాగిన్",
+        signOut: "లాగ్అవుట్",
+        footerTag: "పర్యాటక మేధస్సు మరియు విశ్లేషణల ప్లాట్‌ఫారమ్",
+        footer1: "ఇంటరాక్టివ్ విజువలైజేషన్ ఇంజిన్",
+        footer2: "క్లయింట్-సైడ్ డేటా పైప్‌లైన్",
+        thId: "ఐడీ",
+        thTourist: "పర్యాటకుడు / ఊరు",
+        thDest: "గమ్యస్థానం",
+        thRegion: "ప్రాంతం",
+        thSeason: "కాలం",
+        thPurpose: "బృందం & ప్రయోజనం",
+        thSpend: "ఖర్చు",
+        thDuration: "వ్యవధి",
+        thRating: "రేటింగ్",
+        clearHistory: "చరిత్రను తొలగించండి"
+      },
+      hi: {
+        appTitle: "स्मार्ट पर्यटन विश्लेषिकी प्रणाली",
+        liveBadge: "लाइव इंजन",
+        filterTitle: "डेटा फ़िल्टर और विश्लेषण",
+        clearAll: "सभी फ़िल्टर साफ़ करें",
+        filterSeason: "मौसम के अनुसार फ़िल्टर",
+        filterRegion: "क्षेत्र के अनुसार फ़िल्टर",
+        filterPref: "यात्रा वरीयता",
+        filterSearch: "गंतव्य या शहर खोजें",
+        allSeasons: "🌟 सभी मौसम",
+        allRegions: "📍 सभी क्षेत्र",
+        allPrefs: "🎯 सभी वरीयताएँ",
+        kpi1: "कुल पर्यटक",
+        kpi2: "शीर्ष गंतव्य",
+        kpi3: "औसत पर्यटक खर्च",
+        kpi4: "चरम मौसम",
+        activeRows: "सक्रिय डेटा पंक्तियाँ",
+        highestFootfall: "उच्चतम आगमन",
+        totalVol: "कुल व्यय मात्रा:",
+        chart1Title: "लोकप्रिय गंतव्य",
+        chart1Sub: "प्रमुख पर्यटन स्थलों पर पर्यटकों की संख्या",
+        chart1Badge: "आगमन क्रम",
+        chart2Title: "समय के साथ पर्यटक रुझान",
+        chart2Sub: "मासिक आगमन और मौसमी उतार-चढ़ाव",
+        chart2Badge: "मौसमी वक्र",
+        chart3Title: "पर्यटकों की पसंद",
+        chart3Sub: "यात्रा प्रेरणा और रुचि का विवरण",
+        chart3Badge: "जनसांख्यिकी",
+        chart4Title: "यात्रा समूह द्वारा औसत व्यय",
+        chart4Sub: "अकेले, जोड़े, परिवार और दोस्तों का खर्च",
+        chart4Badge: "व्यय पैटर्न",
+        tableTitle: "डेटासेट रिकॉर्ड (डेटा साइंस पाइपलाइन)",
+        tableSub: "सक्रिय प्रश्नों और फ़िल्टर के विस्तृत रिकॉर्ड",
+        exportView: "दृश्य निर्यात",
+        reset: "रीसेट",
+        exportCsv: "सीएसवी निर्यात",
+        history: "इतिहास",
+        signIn: "साइन इन",
+        signOut: "साइन आउट",
+        footerTag: "पर्यटन बुद्धिमत्ता और विश्लेषण मंच",
+        footer1: "इंटरैक्टिव विज़ुअलाइज़ेशन इंजन",
+        footer2: "क्लाइंट-साइड डेटा पाइपलाइन",
+        thId: "आईडी",
+        thTourist: "पर्यटक / मूल शहर",
+        thDest: "गंतव्य",
+        thRegion: "क्षेत्र",
+        thSeason: "मौसम",
+        thPurpose: "समूह और उद्देश्य",
+        thSpend: "व्यय",
+        thDuration: "अवधि",
+        thRating: "रेटिंग",
+        clearHistory: "इतिहास हटाएं"
+      },
+      es: {
+        appTitle: "Sistema Inteligente de Análisis Turístico",
+        liveBadge: "Motor en Vivo",
+        filterTitle: "Filtros y Segmentación de Datos",
+        clearAll: "Limpiar Todos los Filtros",
+        filterSeason: "Filtrar por Temporada",
+        filterRegion: "Filtrar por Región",
+        filterPref: "Preferencia de Viaje",
+        filterSearch: "Buscar Destino / Ciudad",
+        allSeasons: "🌟 Todas las Temporadas",
+        allRegions: "📍 Todas las Regiones",
+        allPrefs: "🎯 Todas las Preferencias",
+        kpi1: "Visitantes Totales",
+        kpi2: "Destino Principal",
+        kpi3: "Gasto Promedio",
+        kpi4: "Temporada Alta",
+        activeRows: "filas activas de la canalización",
+        highestFootfall: "mayor afluencia",
+        totalVol: "Volumen Total:",
+        chart1Title: "Destinos Populares",
+        chart1Sub: "Recuento de visitantes en los principales destinos",
+        chart1Badge: "Por Visitas",
+        chart2Title: "Tendencias de Visitantes en el Tiempo",
+        chart2Sub: "Distribución temporal y picos estacionales",
+        chart2Badge: "Curva Estacional",
+        chart3Title: "Preferencias Turísticas",
+        chart3Sub: "Distribución por motivación e interés de viaje",
+        chart3Badge: "Demografía",
+        chart4Title: "Gasto por Grupo de Viaje",
+        chart4Sub: "Gasto medio entre Solitarios, Parejas, Familias, Amigos",
+        chart4Badge: "Patrón de Gasto",
+        tableTitle: "Registros del Conjunto de Datos",
+        tableSub: "Filas granulares que reflejan consultas activas",
+        exportView: "Exportar Vista",
+        reset: "Restablecer",
+        exportCsv: "Exportar CSV",
+        history: "Historial",
+        signIn: "Iniciar Sesión",
+        signOut: "Cerrar Sesión",
+        footerTag: "Plataforma de Inteligencia y Análisis Turístico",
+        footer1: "Motor de Visualización Interactivo",
+        footer2: "Canalización de Datos del Lado del Cliente",
+        thId: "ID",
+        thTourist: "Turista / Origen",
+        thDest: "Destino",
+        thRegion: "Región",
+        thSeason: "Temporada",
+        thPurpose: "Grupo y Propósito",
+        thSpend: "Gasto",
+        thDuration: "Duración",
+        thRating: "Calificación",
+        clearHistory: "Borrar Historial"
+      }
+    };
+
+    // 3. Application State
+    let currentLang = localStorage.getItem('tourism_lang') || 'en';
+    let currentTheme = localStorage.getItem('tourism_theme') || 'dark';
+    let currentUser = JSON.parse(localStorage.getItem('tourism_user')) || null;
+    let queryHistory = JSON.parse(localStorage.getItem('tourism_history')) || [];
+
+    let filtered = [...rawDataset];
+    let currentPage = 1;
+    const pageSize = 8;
+    let destChartInstance, trendsChartInstance, prefChartInstance, spendChartInstance;
+
+    // Formatting currency
+    function formatINR(num) {
+      return '₹' + Number(num).toLocaleString('en-IN');
+    }
+
+    // Language Switcher Function
+    function changeLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('tourism_lang', lang);
+      const dict = i18n[lang] || i18n.en;
+
+      // Update text in elements
+      document.getElementById('txtAppTitle').innerText = dict.appTitle;
+      document.getElementById('txtLiveBadge').innerText = dict.liveBadge;
+      document.getElementById('txtFilterTitle').innerText = dict.filterTitle;
+      document.getElementById('txtClearAll').innerText = dict.clearAll;
+      document.getElementById('lblFilterSeason').innerHTML = `<i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-400"></i> ${dict.filterSeason}`;
+      document.getElementById('lblFilterRegion').innerHTML = `<i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i> ${dict.filterRegion}`;
+      document.getElementById('lblFilterPref').innerHTML = `<i data-lucide="tag" class="w-3.5 h-3.5 text-purple-400"></i> ${dict.filterPref}`;
+      document.getElementById('lblFilterSearch').innerHTML = `<i data-lucide="search" class="w-3.5 h-3.5 text-cyan-400"></i> ${dict.filterSearch}`;
+      
+      document.getElementById('txtKpi1Title').innerText = dict.kpi1;
+      document.getElementById('txtKpi2Title').innerText = dict.kpi2;
+      document.getElementById('txtKpi3Title').innerText = dict.kpi3;
+      document.getElementById('txtKpi4Title').innerText = dict.kpi4;
+      document.getElementById('txtActiveRows').innerText = dict.activeRows;
+      document.getElementById('txtHighestFootfall').innerText = dict.highestFootfall;
+      document.getElementById('txtTotalVol').innerText = dict.totalVol;
+
+      document.getElementById('txtChart1Title').innerText = dict.chart1Title;
+      document.getElementById('txtChart1Sub').innerText = dict.chart1Sub;
+      document.getElementById('txtChart1Badge').innerText = dict.chart1Badge;
+
+      document.getElementById('txtChart2Title').innerText = dict.chart2Title;
+      document.getElementById('txtChart2Sub').innerText = dict.chart2Sub;
+      document.getElementById('txtChart2Badge').innerText = dict.chart2Badge;
+
+      document.getElementById('txtChart3Title').innerText = dict.chart3Title;
+      document.getElementById('txtChart3Sub').innerText = dict.chart3Sub;
+      document.getElementById('txtChart3Badge').innerText = dict.chart3Badge;
+
+      document.getElementById('txtChart4Title').innerText = dict.chart4Title;
+      document.getElementById('txtChart4Sub').innerText = dict.chart4Sub;
+      document.getElementById('txtChart4Badge').innerText = dict.chart4Badge;
+
+      document.getElementById('txtTableTitle').innerText = dict.tableTitle;
+      document.getElementById('txtTableSub').innerText = dict.tableSub;
+      document.getElementById('txtExportView').innerText = dict.exportView;
+      document.getElementById('txtResetBtn').innerText = dict.reset;
+      document.getElementById('txtExportBtn').innerText = dict.exportCsv;
+      document.getElementById('txtHistoryBtn').innerText = dict.history;
+
+      document.getElementById('txtFooterTag').innerText = dict.footerTag;
+      document.getElementById('txtFooter1').innerText = dict.footer1;
+      document.getElementById('txtFooter2').innerText = dict.footer2;
+
+      document.getElementById('thId').innerText = dict.thId;
+      document.getElementById('thTourist').innerText = dict.thTourist;
+      document.getElementById('thDest').innerText = dict.thDest;
+      document.getElementById('thRegion').innerText = dict.thRegion;
+      document.getElementById('thSeason').innerText = dict.thSeason;
+      document.getElementById('thPurpose').innerText = dict.thPurpose;
+      document.getElementById('thSpend').innerText = dict.thSpend;
+      document.getElementById('thDuration').innerText = dict.thDuration;
+      document.getElementById('thRating').innerText = dict.thRating;
+
+      document.getElementById('langSelect').value = lang;
+      lucide.createIcons();
+    }
+
+    // Theme Switcher Function
+    function toggleTheme() {
+      const body = document.body;
+      const themeIcon = document.getElementById('themeIcon');
+      if (body.classList.contains('dark')) {
+        body.classList.remove('dark');
+        body.classList.add('light');
+        currentTheme = 'light';
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeIcon.classList.remove('text-amber-400');
+        themeIcon.classList.add('text-indigo-600');
+      } else {
+        body.classList.remove('light');
+        body.classList.add('dark');
+        currentTheme = 'dark';
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeIcon.classList.remove('text-indigo-600');
+        themeIcon.classList.add('text-amber-400');
+      }
+      localStorage.setItem('tourism_theme', currentTheme);
+      lucide.createIcons();
+      updateCharts(); // Refresh charts to adapt to theme grid lines
+    }
+
+    function initTheme() {
+      if (currentTheme === 'light') {
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
+        const themeIcon = document.getElementById('themeIcon');
+        if (themeIcon) {
+          themeIcon.setAttribute('data-lucide', 'moon');
+          themeIcon.classList.remove('text-amber-400');
+          themeIcon.classList.add('text-indigo-600');
+        }
+      }
+    }
+
+    // Auth Management (Sign In / Sign Out)
+    function checkAuth() {
+      const container = document.getElementById('authContainer');
+      const dict = i18n[currentLang] || i18n.en;
+      if (currentUser) {
+        // Signed in UI
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        container.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-xl">
+            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+              ${initials}
+            </div>
+            <div class="hidden sm:block text-left">
+              <div class="text-xs font-bold text-white truncate max-w-[90px] leading-tight">${currentUser.name}</div>
+              <div class="text-[9px] text-cyan-400 leading-none">${currentUser.role || 'Analyst'}</div>
+            </div>
+            <button onclick="handleSignOut()" class="ml-1 text-slate-400 hover:text-rose-400 transition" title="${dict.signOut}">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+      } else {
+        // Signed out UI
+        container.innerHTML = `
+          <button onclick="toggleAuthModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition flex items-center gap-1">
+            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+            <span>${dict.signIn}</span>
+          </button>
+        `;
+      }
+      lucide.createIcons();
+    }
+
+    function toggleAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.classList.toggle('hidden');
+    }
+
+    function handleSignIn(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('authInputName').value.trim();
+      const role = document.getElementById('authInputRole').value;
+      if (!name) return;
+      currentUser = { name, role, signedInAt: new Date().toISOString() };
+      localStorage.setItem('tourism_user', JSON.stringify(currentUser));
+      toggleAuthModal();
+      checkAuth();
+      addHistoryRecord("Sign In", `User logged in as ${role}`, filtered.length);
+    }
+
+    function quickLogin(name, role) {
+      document.getElementById('authInputName').value = name;
+      document.getElementById('authInputRole').value = role;
+      handleSignIn();
+    }
+
+    function handleSignOut() {
+      addHistoryRecord("Sign Out", `${currentUser.name} logged out`, filtered.length);
+      currentUser = null;
+      localStorage.removeItem('tourism_user');
+      checkAuth();
+    }
+
+    // Query & Filter History Logging
+    function addHistoryRecord(action, details, count, state = null) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const record = {
+        id: 'hist_' + Date.now(),
+        action,
+        details,
+        count,
+        time: timeStr,
+        user: currentUser ? currentUser.name : 'Guest',
+        state: state || {
+          season: document.getElementById('seasonFilter').value,
+          region: document.getElementById('regionFilter').value,
+          pref: document.getElementById('prefFilter').value,
+          search: document.getElementById('searchInput').value
+        }
+      };
+
+      queryHistory.unshift(record);
+      if (queryHistory.length > 25) queryHistory.pop(); // Keep last 25 entries
+      localStorage.setItem('tourism_history', JSON.stringify(queryHistory));
+      updateHistoryBadge();
+    }
+
+    function updateHistoryBadge() {
+      const badge = document.getElementById('historyBadge');
+      if (badge) badge.innerText = queryHistory.length;
+    }
+
+    function toggleHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        renderHistoryList();
+      }
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      if (queryHistory.length === 0) {
+        container.innerHTML = `
+          <div class="py-8 text-center text-slate-500 text-xs">
+            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+            No query history saved yet. Apply filters or search to log activities!
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = queryHistory.map(item => `
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between gap-3 hover:border-cyan-500/40 transition">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                item.action.includes('Export') ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
+                item.action.includes('Sign') ? 'bg-indigo-950 text-indigo-300 border border-indigo-800' :
+                'bg-cyan-950 text-cyan-300 border border-cyan-800'
+              }">${item.action}</span>
+              <span class="text-xs font-semibold text-white">${item.details}</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+              <span>⏰ ${item.time}</span>
+              <span>•</span>
+              <span>👤 ${item.user}</span>
+              <span>•</span>
+              <span class="text-emerald-400 font-medium">${item.count} records</span>
+            </div>
+          </div>
+          ${item.state ? `
+            <button onclick="restoreHistoryQuery('${item.id}')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition flex items-center gap-1 shrink-0">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Apply
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function restoreHistoryQuery(id) {
+      const found = queryHistory.find(h => h.id === id);
+      if (!found || !found.state) return;
+      document.getElementById('seasonFilter').value = found.state.season || 'All';
+      document.getElementById('regionFilter').value = found.state.region || 'All';
+      document.getElementById('prefFilter').value = found.state.pref || 'All';
+      document.getElementById('searchInput').value = found.state.search || '';
+      toggleHistoryModal();
+      applyFilters(false);
+    }
+
+    function clearHistory() {
+      queryHistory = [];
+      localStorage.removeItem('tourism_history');
+      updateHistoryBadge();
+      renderHistoryList();
+    }
+
+    // Filter Logic
+    function applyFilters(recordHistory = true) {
+      const season = document.getElementById('seasonFilter').value;
+      const region = document.getElementById('regionFilter').value;
+      const pref = document.getElementById('prefFilter').value;
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      const clearBtn = document.getElementById('clearFiltersBtn');
+      if (season !== 'All' || region !== 'All' || pref !== 'All' || q !== '') {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      filtered = rawDataset.filter(item => {
+        if (season !== 'All' && item.season !== season) return false;
+        if (region !== 'All' && item.region !== region) return false;
+        if (pref !== 'All' && item.preference !== pref) return false;
+        if (q !== '') {
+          const match = item.destination.toLowerCase().includes(q) ||
+                        item.originCity.toLowerCase().includes(q) ||
+                        item.touristName.toLowerCase().includes(q) ||
+                        item.preference.toLowerCase().includes(q);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      currentPage = 1;
+      updateKpis();
+      updateCharts();
+      renderTable();
+
+      if (recordHistory) {
+        let details = [];
+        if (season !== 'All') details.push(season);
+        if (region !== 'All') details.push(region);
+        if (pref !== 'All') details.push(pref);
+        if (q) details.push(`"${q}"`);
+        const detailStr = details.length > 0 ? `Filter: ${details.join(', ')}` : 'Reset / All Records';
+        addHistoryRecord("Query Sliced", detailStr, filtered.length);
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById('seasonFilter').value = 'All';
+      document.getElementById('regionFilter').value = 'All';
+      document.getElementById('prefFilter').value = 'All';
+      document.getElementById('searchInput').value = '';
+      applyFilters(true);
+    }
+
+    function updateKpis() {
+      const count = filtered.length;
+      document.getElementById('counterPill').innerText = `${count} / ${rawDataset.length} records`;
+      document.getElementById('kpiTotalVisitors').innerText = count.toLocaleString();
+      document.getElementById('kpiSampleShare').innerText = `${((count / rawDataset.length) * 100).toFixed(0)}% sample`;
+
+      if (count === 0) {
+        document.getElementById('kpiTopDestination').innerText = 'None';
+        document.getElementById('kpiTopDestCount').innerText = '0 visits';
+        document.getElementById('kpiAvgSpending').innerText = '₹0';
+        document.getElementById('kpiTotalRevenue').innerText = '₹0';
+        document.getElementById('kpiPeakSeason').innerText = 'None';
+        document.getElementById('kpiPeakSeasonCount').innerText = '0 visitors';
+        return;
+      }
+
+      const destCounts = {};
+      const seasonCounts = {};
+      let totalSpend = 0;
+      let totalRating = 0;
+
+      filtered.forEach(r => {
+        destCounts[r.destination] = (destCounts[r.destination] || 0) + 1;
+        seasonCounts[r.season] = (seasonCounts[r.season] || 0) + 1;
+        totalSpend += r.spendingAmountINR;
+        totalRating += r.satisfactionRating;
+      });
+
+      let topDest = '';
+      let topDestCount = 0;
+      Object.entries(destCounts).forEach(([dest, c]) => {
+        if (c > topDestCount) { topDestCount = c; topDest = dest; }
+      });
+
+      let peakSeason = '';
+      let peakSeasonCount = 0;
+      Object.entries(seasonCounts).forEach(([s, c]) => {
+        if (c > peakSeasonCount) { peakSeasonCount = c; peakSeason = s; }
+      });
+
+      document.getElementById('kpiTopDestination').innerText = topDest;
+      document.getElementById('kpiTopDestCount').innerText = `${topDestCount} visits`;
+      document.getElementById('kpiAvgSpending').innerText = formatINR(Math.round(totalSpend / count));
+      document.getElementById('kpiTotalRevenue').innerText = formatINR(totalSpend);
+      document.getElementById('kpiPeakSeason').innerText = peakSeason;
+      document.getElementById('kpiPeakSeasonCount').innerText = `${peakSeasonCount} visitors`;
+      document.getElementById('kpiRating').innerText = `⭐ ${(totalRating / count).toFixed(1)}/5`;
+    }
+
+    function updateCharts() {
+      const isLight = document.body.classList.contains('light');
+      const gridColor = isLight ? 'rgba(203, 213, 225, 0.6)' : 'rgba(51, 65, 85, 0.25)';
+      const tickColor = isLight ? '#475569' : '#94a3b8';
+
+      // 1. Popular Destinations
+      const destMap = {};
+      filtered.forEach(r => destMap[r.destination] = (destMap[r.destination] || 0) + 1);
+      const sortedDests = Object.entries(destMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+      const destLabels = sortedDests.map(d => d[0]);
+      const destData = sortedDests.map(d => d[1]);
+
+      if (destChartInstance) destChartInstance.destroy();
+      destChartInstance = new Chart(document.getElementById('destinationsChart'), {
+        type: 'bar',
+        data: {
+          labels: destLabels,
+          datasets: [{
+            label: 'Visits',
+            data: destData,
+            backgroundColor: 'rgba(6, 182, 212, 0.85)',
+            borderColor: 'rgba(6, 182, 212, 1)',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, stepSize: 2 } }
+          }
+        }
+      });
+
+      // 2. Visitor Trends Over Time
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const monthlyCounts = new Array(12).fill(0);
+      filtered.forEach(r => {
+        const m = new Date(r.visitDate).getMonth();
+        monthlyCounts[m] += 1;
+      });
+
+      if (trendsChartInstance) trendsChartInstance.destroy();
+      trendsChartInstance = new Chart(document.getElementById('trendsChart'), {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'Monthly Footfall',
+            data: monthlyCounts,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#0284c7'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor, stepSize: 2 } }
+          }
+        }
+      });
+
+      // 3. Tourist Preferences Donut
+      const prefMap = {};
+      filtered.forEach(r => prefMap[r.preference] = (prefMap[r.preference] || 0) + 1);
+      const prefLabels = Object.keys(prefMap);
+      const prefData = Object.values(prefMap);
+
+      if (prefChartInstance) prefChartInstance.destroy();
+      prefChartInstance = new Chart(document.getElementById('preferencesChart'), {
+        type: 'doughnut',
+        data: {
+          labels: prefLabels,
+          datasets: [{
+            data: prefData,
+            backgroundColor: ['#38bdf8', '#34d399', '#fbbf24', '#c084fc', '#f472b6'],
+            borderWidth: 2,
+            borderColor: isLight ? '#ffffff' : '#0f172a'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: { position: 'right', labels: { color: tickColor, usePointStyle: true } }
+          }
+        }
+      });
+
+      // 4. Expenditure by Travel Group
+      const groupMap = { Solo: {c:0, s:0}, Couple: {c:0, s:0}, Family: {c:0, s:0}, Friends: {c:0, s:0} };
+      filtered.forEach(r => {
+        if (groupMap[r.travelGroup]) {
+          groupMap[r.travelGroup].c += 1;
+          groupMap[r.travelGroup].s += r.spendingAmountINR;
+        }
+      });
+
+      const groups = Object.keys(groupMap);
+      const avgSpends = groups.map(g => groupMap[g].c > 0 ? Math.round(groupMap[g].s / groupMap[g].c) : 0);
+
+      if (spendChartInstance) spendChartInstance.destroy();
+      spendChartInstance = new Chart(document.getElementById('spendingChart'), {
+        type: 'bar',
+        data: {
+          labels: groups,
+          datasets: [{
+            label: 'Avg Spending',
+            data: avgSpends,
+            backgroundColor: ['#fbbf24', '#f472b6', '#34d399', '#38bdf8'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+            y: {
+              beginAtZero: true,
+              grid: { color: gridColor },
+              ticks: { color: tickColor, callback: v => '₹' + (v/1000) + 'k' }
+            }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      const start = (currentPage - 1) * pageSize;
+      const slice = filtered.slice(start, start + pageSize);
+
+      if (slice.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">No records match the current filter selection.</td></tr>`;
+        document.getElementById('tablePaginationInfo').innerText = 'Showing 0 of 0 entries';
+        document.getElementById('prevBtn').disabled = true;
+        document.getElementById('nextBtn').disabled = true;
+        return;
+      }
+
+      tbody.innerHTML = slice.map(r => `
+        <tr class="hover:bg-slate-800/60 transition">
+          <td class="px-4 py-3 font-mono text-cyan-400 font-semibold">${r.id}</td>
+          <td class="px-4 py-3">
+            <div class="font-semibold text-white">${r.touristName}</div>
+            <div class="text-[11px] text-slate-400">${r.originCity}, ${r.originCountry}</div>
+          </td>
+          <td class="px-4 py-3 font-medium text-slate-100">${r.destination}</td>
+          <td class="px-4 py-3 text-slate-300">${r.region}</td>
+          <td class="px-4 py-3">
+            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+              r.season === 'Summer' ? 'bg-amber-950/80 text-amber-300 border-amber-800/80' :
+              r.season === 'Winter' ? 'bg-cyan-950/80 text-cyan-300 border-cyan-800/80' :
+              r.season === 'Monsoon' ? 'bg-blue-950/80 text-blue-300 border-blue-800/80' :
+              'bg-purple-950/80 text-purple-300 border-purple-800/80'
+            }">${r.season}</span>
+          </td>
+          <td class="px-4 py-3">
+            <div class="text-slate-200 font-medium">${r.preference}</div>
+            <div class="text-[11px] text-slate-400">${r.travelGroup} Group</div>
+          </td>
+          <td class="px-4 py-3 text-right font-semibold text-emerald-400">${formatINR(r.spendingAmountINR)}</td>
+          <td class="px-4 py-3 text-center text-slate-300">${r.stayDurationDays} days</td>
+          <td class="px-4 py-3 text-center font-semibold text-amber-300">⭐ ${r.satisfactionRating}</td>
+        </tr>
+      `).join('');
+
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      document.getElementById('tablePaginationInfo').innerText = `Showing ${start + 1} to ${Math.min(start + pageSize, filtered.length)} of ${filtered.length} entries`;
+      document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === totalPages;
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTable();
+      }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTable();
+      }
+    }
+
+    function exportToCsv() {
+      if (filtered.length === 0) return alert('No data to export.');
+      const headers = ['ID', 'Tourist Name', 'Origin City', 'Origin Country', 'Destination', 'Region', 'Season', 'Travel Group', 'Preference', 'Spending (INR)', 'Duration (Days)', 'Rating', 'Date', 'Booking Mode'];
+      const rows = filtered.map(r => [
+        r.id, `"${r.touristName}"`, `"${r.originCity}"`, `"${r.originCountry}"`, `"${r.destination}"`, `"${r.region}"`, `"${r.season}"`, `"${r.travelGroup}"`, `"${r.preference}"`, r.spendingAmountINR, r.stayDurationDays, r.satisfactionRating, r.visitDate, `"${r.bookingMode}"`
+      ]);
+      const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csv);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'smart_tourism_analytics_dataset.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      addHistoryRecord("CSV Export", `Exported ${filtered.length} tourist records`, filtered.length);
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      checkAuth();
+      updateHistoryBadge();
+      changeLanguage(currentLang);
+      applyFilters(false);
+    });
+  </script>
+</body>
+</html>
